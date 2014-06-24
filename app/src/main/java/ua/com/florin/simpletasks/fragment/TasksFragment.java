@@ -63,6 +63,9 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
      */
     private BaseAdapter mTasksAdapter;
 
+    /**
+     * List of selected tasks to perform actions with in Contextual Action Bar
+     */
     private List<Long> mSelectedTaskIds;
 
     /**
@@ -173,27 +176,10 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.action_delete:
-                            Log.d(TAG, "delete button pressed");
                             SparseBooleanArray mCheckedItemPositions
                                     = mListView.getCheckedItemPositions();
                             setSelectedTaskIds(mCheckedItemPositions);
                             showDeleteConfirmDialog();
-                            Log.d(TAG, "checked size: " + mCheckedItemPositions.size());
-//                            if (deleteConfirmed) {
-//                                //user confirmed deletion in AlertDialog
-//                                SparseBooleanArray mCheckedItemsPositions
-//                                        = mListView.getCheckedItemPositions();
-//                                for (int i = 0; i < mListView.getAdapter().getCount(); i++) {
-//                                    if (mCheckedItemsPositions.get(i)) {
-//                                        long id = getIdByPosition(i);
-//                                        Uri mItemUri = ContentUris.withAppendedId(TasksProvider.CONTENT_URI, id);
-//                                        getActivity().getContentResolver().delete(mItemUri, null, null);
-//                                    }
-//                                }
-//                                // get down the flag after the operation
-//                                Log.d(TAG, "deleted");
-//                                deleteConfirmed = false;
-//                            }
                             mode.finish();
                             return true;
                     }
@@ -243,6 +229,11 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
         return mId;
     }
 
+    /**
+     * Initializes {@link TasksFragment#mSelectedTaskIds}
+     *
+     * @param checkedItemPositions SparseBooleanArray of selected tasks positions
+     */
     private void setSelectedTaskIds(SparseBooleanArray checkedItemPositions) {
         mSelectedTaskIds = new ArrayList<Long>();
         long selectedTaskId;
@@ -258,12 +249,14 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
      * Creates new Dialog for confirmation to delete selected tasks and shows it.
      */
     private void showDeleteConfirmDialog() {
-        Log.d(TAG, "showDeleteConfirmDialog");
         DialogFragment dialogFragment = new DeleteConfirmDialogFragment();
         dialogFragment.setTargetFragment(this, 0);
         dialogFragment.show(getFragmentManager(), "DeleteConfirmDialog");
     }
 
+    /**
+     * Deletes tasks with IDs defined in {@link TasksFragment#mSelectedTaskIds}
+     */
     private void deleteSelectedTasks() {
         for (int i = 0; i < mSelectedTaskIds.size(); i++) {
             long id = mSelectedTaskIds.get(i);
@@ -275,7 +268,6 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
-        Log.d(TAG, "ok pressed");
         deleteSelectedTasks();
         dialog.dismiss();
     }
@@ -283,7 +275,6 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
         deleteConfirmed = false;
-        Log.d(TAG, "cancel pressed");
         dialog.dismiss();
     }
 }
