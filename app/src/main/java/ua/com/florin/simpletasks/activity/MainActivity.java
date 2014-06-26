@@ -2,28 +2,39 @@ package ua.com.florin.simpletasks.activity;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ContentUris;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import ua.com.florin.simpletasks.R;
+import ua.com.florin.simpletasks.db.DBNames;
+import ua.com.florin.simpletasks.db.TasksProvider;
 import ua.com.florin.simpletasks.fragment.AboutFragment;
 import ua.com.florin.simpletasks.fragment.AddTaskFragment;
 import ua.com.florin.simpletasks.fragment.NavigationDrawerFragment;
 import ua.com.florin.simpletasks.fragment.TasksFragment;
-import ua.com.florin.simpletasks.fragment.dialog.DeleteConfirmDialogFragment;
+import ua.com.florin.simpletasks.fragment.TestFragment;
 import ua.com.florin.simpletasks.util.MyConstants;
 
 
-public class MainActivity extends Activity implements MyConstants,
+public class MainActivity extends Activity implements DBNames, MyConstants,
         NavigationDrawerFragment.NavigationDrawerCallbacks,
-        TasksFragment.OnTaskSelectedListener {
+        TasksFragment.OnTaskSelectedListener,
+        AddTaskFragment.AddTaskFragmentCallbacks {
 
     /**
      * Logging tag constant
@@ -62,40 +73,6 @@ public class MainActivity extends Activity implements MyConstants,
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
-    }
-
-    /**
-     * Here the order of references in navigation drawer is determined.
-     * To change the order constructor calls in cases should be rearranged
-     * and "drawer_items" array is res/values/arrays should also be changed accordingly.
-     *
-     * @param position position of selected item in Navigation Drawer, starting from 0.
-     */
-    @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        Log.d(TAG, "onNavigationDrawerItemSelected");
-        // update the main content by replacing fragments
-        Fragment fragment;
-        switch (position) {
-            case 0:
-                fragment = new TasksFragment();
-                break;
-            case 1:
-                fragment = new AboutFragment();
-                break;
-            default:
-                fragment = new TasksFragment();
-        }
-
-        Bundle args = new Bundle();
-        args.putInt(ARG_DRAWER_POSITION, position);
-        fragment.setArguments(args);
-
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .addToBackStack(null)
-                .commit();
     }
 
     public void onFragmentAttached(int position) {
@@ -144,6 +121,42 @@ public class MainActivity extends Activity implements MyConstants,
         }
     }
 
+    /**
+     * Here the order of references in navigation drawer is determined.
+     * To change the order constructor calls in cases should be rearranged
+     * and "drawer_items" array is res/values/arrays should also be changed accordingly.
+     *
+     * @param position position of selected item in Navigation Drawer, starting from 0.
+     */
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+        Log.d(TAG, "onNavigationDrawerItemSelected");
+        // update the main content by replacing fragments
+        Fragment fragment;
+        switch (position) {
+            case 0:
+                fragment = new TasksFragment();
+                break;
+            case 1:
+                fragment = new AboutFragment();
+                break;
+            case 2:
+                fragment = new TestFragment();
+                break;
+            default:
+                fragment = new TasksFragment();
+        }
+
+        Bundle args = new Bundle();
+        args.putInt(ARG_DRAWER_POSITION, position);
+        fragment.setArguments(args);
+
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
+    }
+
     @Override
     public void onTaskSelected(long id) {
         // The user selected the headline of an article from the HeadlinesFragment
@@ -176,5 +189,31 @@ public class MainActivity extends Activity implements MyConstants,
         // Commit the transaction
         transaction.commit();
 //        }
+    }
+
+    @Override
+    public void createNotification(Uri uri) {
+        Cursor mTaskByIdCursor = getContentResolver()
+                .query(uri, null, null, null, null);
+        mTaskByIdCursor.moveToFirst();
+
+        int idTitle = mTaskByIdCursor.getColumnIndexOrThrow(COL_TITLE);
+        int idDate = mTaskByIdCursor.getColumnIndexOrThrow(COL_EXECUTION_TIME);
+        int idRemind = mTaskByIdCursor.getColumnIndexOrThrow(COL_REMIND_TIME);
+
+        Notification.Builder mBuilder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle(mTaskByIdCursor.getString(idTitle));
+
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager.notify(88, mBuilder.getNotification());
     }
 }

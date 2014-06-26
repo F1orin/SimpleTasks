@@ -1,8 +1,12 @@
 package ua.com.florin.simpletasks.fragment;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,6 +43,11 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      */
     private long mCurrentID = NEW_TASK_CODE;
 
+    /**
+     * A callback reference to communicate with activity
+     */
+    private AddTaskFragmentCallbacks mCallbacks;
+
     private Calendar mTaskCal = Calendar.getInstance();
     private Calendar mRemindCal = Calendar.getInstance();
 
@@ -49,17 +58,30 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
     private TextView mTaskRepeatView;
 
     /**
-     * The container Activity must implement this interface so that the frag can deliver messages
+     * The container Activity must implement this interface
+     * so that the fragment can deliver messages
      */
-    public interface OnPickerCalledListener {
+    public interface AddTaskFragmentCallbacks {
 
-        /**
-         * Realizes logic that executes when picker is called
-         *
-         * @param pickerCode picker code specified as constant
-         *                   in {@link ua.com.florin.simpletasks.util.MyConstants}
-         */
-        public void onPickerCalled(int pickerCode, long defaultTime);
+        //TODO create documentation for this method
+        public void createNotification(Uri uri);
+    }
+
+    /**
+     * Makes sure that the container activity has implemented
+     * the callback interface. If not, it throws an exception.
+     *
+     * @param activity the container activity
+     */
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mCallbacks = (AddTaskFragmentCallbacks) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement AddTaskFragmentCallbacks");
+        }
     }
 
     @Override
@@ -79,7 +101,6 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
         if (savedInstanceState != null) {
             mCurrentID = savedInstanceState.getLong(ARG_TASK_ID);
         }
-
 
         return inflater.inflate(R.layout.fragment_add_task, container, false);
     }
@@ -106,6 +127,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         mTaskTitleView = (EditText) view.findViewById(R.id.frag_add_title);
         mTaskDateView = (TextView) view.findViewById(R.id.frag_add_task_date);
@@ -155,48 +177,69 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
         mRemindDateView.setOnTouchListener(editTextListener);
 
         /**
-         * A listener for save and cancel buttons.
+         * A listener for task's save/cancel and clear buttons.
          * Contains the task saving and updating logic.
          */
         View.OnClickListener buttonsListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Activity mActivity = getActivity();
                 switch (v.getId()) {
                     case R.id.frag_add_button_save:
-                        ContentValues contentValues = new ContentValues();
-                        contentValues.put(COL_CREATION_TIME, System.currentTimeMillis());
+                        ContentValues mContentValues = new ContentValues();
+                        mContentValues.put(COL_CREATION_TIME, System.currentTimeMillis());
                         if (isEmpty(mTaskTitleView)) {
-                            contentValues.putNull(COL_TITLE);
+                            mContentValues.putNull(COL_TITLE);
                         } else {
-                            contentValues.put(COL_TITLE, mTaskTitleView.getText().toString());
+                            mContentValues.put(COL_TITLE, mTaskTitleView.getText().toString());
                         }
                         if (mTaskCal == null) {
-                            contentValues.putNull(COL_EXECUTION_TIME);
+                            mContentValues.putNull(COL_EXECUTION_TIME);
                         } else {
-                            contentValues.put(COL_EXECUTION_TIME, mTaskCal.getTimeInMillis());
+                            mContentValues.put(COL_EXECUTION_TIME, mTaskCal.getTimeInMillis());
                         }
                         if (mRemindCal == null) {
-                            contentValues.putNull(COL_REMIND_TIME);
+                            mContentValues.putNull(COL_REMIND_TIME);
                         } else {
-                            contentValues.put(COL_REMIND_TIME, mRemindCal.getTimeInMillis());
+                            mContentValues.put(COL_REMIND_TIME, mRemindCal.getTimeInMillis());
                         }
                         //TODO add repeat functionality
-                        contentValues.putNull(COL_REPEAT_INTERVAL);
+                        mContentValues.putNull(COL_REPEAT_INTERVAL);
 
                         if (mCurrentID != NEW_TASK_CODE) {
                             // update existing task
-                            getActivity().getContentResolver()
-                                    .update(TasksProvider.CONTENT_URI, contentValues, "_id=" + mCurrentID, null);
+                            if (mActivity != null) {
+                                mActivity.getContentResolver()
+                                        .update(TasksProvider.CONTENT_URI, mContentValues, "_id=" + mCurrentID, null);
+                            }
                         } else {
                             // create new task
-                            getActivity().getContentResolver()
-                                    .insert(TasksProvider.CONTENT_URI, contentValues);
+                            if (mActivity != null) {
+                                String newTaskIdString = mActivity.getContentResolver()
+                                        .insert(TasksProvider.CONTENT_URI, mContentValues)
+                                        .getLastPathSegment();
+                                if (newTaskIdString != null) {
+                                    mCurrentID = Long.parseLong(newTaskIdString);
+                                }
+                            }
                         }
 
-                        getActivity().getFragmentManager().popBackStack();
+                        //create notification for this task
+                        Log.d(TAG, "current id:" + mCurrentID);
+                        Uri taskUri = TasksProvider.CONTENT_URI.buildUpon()
+                                .appendPath(String.valueOf(mCurrentID))
+                                .build();
+                        mCallbacks.createNotification(taskUri);
+
+                        //go to task list when save button is pressed
+                        if (mActivity != null) {
+                            mActivity.getFragmentManager().popBackStack();
+                        }
                         break;
                     case R.id.frag_add_button_cancel:
-                        getActivity().getFragmentManager().popBackStack();
+                        if (mActivity != null) {
+                            mActivity.getFragmentManager().popBackStack();
+                        }
                         break;
                     case R.id.frag_add_clear_task_date:
                         mTaskCal = null;
@@ -218,7 +261,6 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
         clearRemindButton.setOnClickListener(buttonsListener);
         clearTaskRepeatButton.setOnClickListener(buttonsListener);
 
-        super.onViewCreated(view, savedInstanceState);
     }
 
     @Override
@@ -227,6 +269,12 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
 
         // Save the current task selection in case we need to recreate the fragment
         outState.putLong(ARG_TASK_ID, mCurrentID);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
     }
 
     /**
@@ -244,7 +292,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      * Updates remind date in UI
      */
     private void updateRemindDateView() {
-        if (mRemindCal == null /*|| !mRemindDateSet*/) {
+        if (mRemindCal == null) {
             mRemindDateView.setText("");
         } else {
             mRemindDateView.setText(sdfDate.format(mRemindCal.getTime()));
@@ -255,24 +303,33 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      * Updates remind time in UI
      */
     private void updateRemindTimeView() {
-        if (mRemindCal == null /*|| !mRemindTimeSet*/) {
+        if (mRemindCal == null) {
             mRemindTimeView.setText(R.string.text_no_remind);
         } else {
             mRemindTimeView.setText(sdfTime.format(mRemindCal.getTime()));
         }
     }
 
+    /**
+     * Updates task and remind dates and remind time in UI
+     */
     private void updateAllViews() {
         updateTaskDateView();
         updateRemindTimeView();
         updateRemindDateView();
     }
 
+    /**
+     * Gets task entry with given ID from database, fills calendars with task data
+     * and updates all views in UI.
+     *
+     * @param id task ID in database
+     */
     private void updateTaskView(long id) {
 
+        Uri mTaskUri = ContentUris.withAppendedId(TasksProvider.CONTENT_URI, id);
         Cursor mTaskByIdCursor = getActivity().getContentResolver()
-                .query(TasksProvider.CONTENT_URI, null, "_id=" + id, null, null);
-
+                .query(mTaskUri, null, null, null, null);
         mTaskByIdCursor.moveToFirst();
 
         int idTitle = mTaskByIdCursor.getColumnIndexOrThrow(COL_TITLE);

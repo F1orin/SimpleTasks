@@ -3,5 +3,6 @@
     <string-array name="drawer_items">
         <item>Tasks</item>
         <item>About</item>
+        <item>Test</item>
     </string-array>
 </resources>

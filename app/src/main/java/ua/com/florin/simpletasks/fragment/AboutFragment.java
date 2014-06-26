@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import ua.com.florin.simpletasks.R;
 import ua.com.florin.simpletasks.activity.MainActivity;
 import ua.com.florin.simpletasks.util.MyConstants;
+import ua.com.florin.simpletasks.util.MyHelper;
 
 
 /**
@@ -17,7 +18,10 @@ import ua.com.florin.simpletasks.util.MyConstants;
  */
 public class AboutFragment extends Fragment implements MyConstants {
 
-    public AboutFragment() {
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        MyHelper.callOnFragmentAttached(this, activity);
     }
 
     @Override
@@ -26,16 +30,5 @@ public class AboutFragment extends Fragment implements MyConstants {
         return rootView;
     }
 
-    /**
-     * This method calls {@link MainActivity#onFragmentAttached(int)} and passes to it
-     * a position of selected item in Navigation Drawer.
-     *
-     * @param activity
-     */
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
 
-        ((MainActivity) activity).onFragmentAttached(getArguments().getInt(ARG_DRAWER_POSITION));
-    }
 }

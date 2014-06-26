@@ -33,6 +33,7 @@ import ua.com.florin.simpletasks.db.DBNames;
 import ua.com.florin.simpletasks.db.TasksProvider;
 import ua.com.florin.simpletasks.fragment.dialog.DeleteConfirmDialogFragment;
 import ua.com.florin.simpletasks.util.MyConstants;
+import ua.com.florin.simpletasks.util.MyHelper;
 
 
 public class TasksFragment extends Fragment implements DBNames, MyConstants,
@@ -44,14 +45,9 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
     private static final String TAG = "TasksFragment";
 
     /**
-     * A label to identify if user confirmed the task deletion if AlertDialog
-     */
-    private boolean deleteConfirmed;
-
-    /**
      * A callback reference to communicate with activity
      */
-    private OnTaskSelectedListener mCallback;
+    private OnTaskSelectedListener mCallbacks;
 
     /**
      * Reference to ListView that contains task items
@@ -75,33 +71,35 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
     }
 
     /**
-     * The container Activity must implement this interface so that the frag can deliver messages
+     * The container Activity must implement this interface
+     * so that the fragment can deliver messages
      */
     public interface OnTaskSelectedListener {
 
         /**
          * Realizes logic that executes when task item is selected
          *
-         * @param ID entry ID in {@link ua.com.florin.simpletasks.db.TasksDB}
+         * @param id entry ID in {@link ua.com.florin.simpletasks.db.TasksDB}
          */
-        public void onTaskSelected(long ID);
+        public void onTaskSelected(long id);
     }
 
     /**
-     * This method calls {@link MainActivity#onFragmentAttached(int)} and passes to it
+     * Makes sure that the container activity has implemented
+     * the callback interface. If not, it throws an exception.
+     * <p/>
+     * Calls {@link MainActivity#onFragmentAttached(int)} and passes to it
      * a position of selected item in Navigation Drawer.
      *
-     * @param activity
+     * @param activity the container activity
      */
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         Log.d(TAG, "onAttach");
-        // This makes sure that the container activity has implemented
-        // the callback interface. If not, it throws an exception.
         try {
-            mCallback = (OnTaskSelectedListener) activity;
-            ((MainActivity) activity).onFragmentAttached(getArguments().getInt(ARG_DRAWER_POSITION));
+            mCallbacks = (OnTaskSelectedListener) activity;
+            MyHelper.callOnFragmentAttached(this, activity);
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnTaskSelectedListener");
@@ -133,11 +131,17 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
         return view;
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
     private AbsListView.OnItemClickListener onItemClickListener =
             new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    mCallback.onTaskSelected(getIdByPosition(position));
+                    mCallbacks.onTaskSelected(getIdByPosition(position));
                 }
             };
 
@@ -260,8 +264,8 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
     private void deleteSelectedTasks() {
         for (int i = 0; i < mSelectedTaskIds.size(); i++) {
             long id = mSelectedTaskIds.get(i);
-            Uri mItemUri = ContentUris.withAppendedId(TasksProvider.CONTENT_URI, id);
-            getActivity().getContentResolver().delete(mItemUri, null, null);
+            Uri mTaskUri = ContentUris.withAppendedId(TasksProvider.CONTENT_URI, id);
+            getActivity().getContentResolver().delete(mTaskUri, null, null);
         }
         mSelectedTaskIds = null;
     }
@@ -274,7 +278,6 @@ public class TasksFragment extends Fragment implements DBNames, MyConstants,
 
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
-        deleteConfirmed = false;
         dialog.dismiss();
     }
 }

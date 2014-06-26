@@ -13,7 +13,7 @@ public interface MyConstants {
     String ARG_TASK_ID = "task_id";
     String ARG_DELETE_CONFIRMED = "delete_confirmed";
 
-    String[] DRAWER_ELEMENTS = {"Tasks", "About"};
+    String[] DRAWER_ELEMENTS = {"Tasks", "About", "Test"};
 
     SimpleDateFormat sdfDate = new SimpleDateFormat("dd.MM.yyyy");
     SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm");
