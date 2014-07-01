@@ -11,7 +11,8 @@ public interface MyConstants {
 
     String ARG_DRAWER_POSITION = "drawer_position";
     String ARG_TASK_ID = "task_id";
-    String ARG_DELETE_CONFIRMED = "delete_confirmed";
+
+    String ACTION_CREATE_NOTIFICATION = "ua.com.florin.simpletasks.CREATE_NOTIFICATION";
 
     String[] DRAWER_ELEMENTS = {"Tasks", "About", "Test"};
 

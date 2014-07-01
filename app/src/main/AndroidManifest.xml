@@ -21,7 +21,11 @@
             android:name="ua.com.florin.simpletasks.db.TasksProvider"
             android:authorities="ua.com.florin.simpletasks" />
 
-        <receiver android:name=".util.TaskRemindReceiver" />
+        <receiver android:name=".util.TaskRemindReceiver" >
+            <intent-filter>
+                <action android:name="ua.com.florin.simpletasks.util.MyConstants.ACTION_CREATE_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

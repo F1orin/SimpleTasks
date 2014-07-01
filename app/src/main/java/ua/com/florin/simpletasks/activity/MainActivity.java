@@ -191,29 +191,29 @@ public class MainActivity extends Activity implements DBNames, MyConstants,
 //        }
     }
 
-    @Override
-    public void createNotification(Uri uri) {
-        Cursor mTaskByIdCursor = getContentResolver()
-                .query(uri, null, null, null, null);
-        mTaskByIdCursor.moveToFirst();
-
-        int idTitle = mTaskByIdCursor.getColumnIndexOrThrow(COL_TITLE);
-        int idDate = mTaskByIdCursor.getColumnIndexOrThrow(COL_EXECUTION_TIME);
-        int idRemind = mTaskByIdCursor.getColumnIndexOrThrow(COL_REMIND_TIME);
-
-        Notification.Builder mBuilder = new Notification.Builder(this)
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setContentTitle(mTaskByIdCursor.getString(idTitle));
-
-        Intent resultIntent = new Intent(this, MainActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.setContentIntent(resultPendingIntent);
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        mNotificationManager.notify(88, mBuilder.getNotification());
-    }
+//    @Override
+//    public void createNotification(Uri uri) {
+//        Cursor mTaskByIdCursor = getContentResolver()
+//                .query(uri, null, null, null, null);
+//        mTaskByIdCursor.moveToFirst();
+//
+//        int idTitle = mTaskByIdCursor.getColumnIndexOrThrow(COL_TITLE);
+//        int idDate = mTaskByIdCursor.getColumnIndexOrThrow(COL_EXECUTION_TIME);
+//        int idRemind = mTaskByIdCursor.getColumnIndexOrThrow(COL_REMIND_TIME);
+//
+//        Notification.Builder mBuilder = new Notification.Builder(this)
+//                .setSmallIcon(R.drawable.ic_launcher)
+//                .setContentTitle(mTaskByIdCursor.getString(idTitle));
+//
+//        Intent resultIntent = new Intent(this, MainActivity.class);
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//        stackBuilder.addParentStack(MainActivity.class);
+//        stackBuilder.addNextIntent(resultIntent);
+//        PendingIntent resultPendingIntent =
+//                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+//        mBuilder.setContentIntent(resultPendingIntent);
+//        NotificationManager mNotificationManager =
+//                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//        mNotificationManager.notify(88, mBuilder.getNotification());
+//    }
 }

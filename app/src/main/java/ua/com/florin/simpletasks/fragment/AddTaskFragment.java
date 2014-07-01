@@ -1,13 +1,17 @@
 package ua.com.florin.simpletasks.fragment;
 
-import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Fragment;
+import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -26,6 +30,7 @@ import ua.com.florin.simpletasks.db.TasksProvider;
 import ua.com.florin.simpletasks.fragment.dialog.DatePickerDialogFragment;
 import ua.com.florin.simpletasks.fragment.dialog.TimePickerDialogFragment;
 import ua.com.florin.simpletasks.util.MyConstants;
+import ua.com.florin.simpletasks.util.TaskRemindReceiver;
 
 
 /**
@@ -64,7 +69,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
     public interface AddTaskFragmentCallbacks {
 
         //TODO create documentation for this method
-        public void createNotification(Uri uri);
+//        public void createNotification(Uri uri);
     }
 
     /**
@@ -229,7 +234,18 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
                         Uri taskUri = TasksProvider.CONTENT_URI.buildUpon()
                                 .appendPath(String.valueOf(mCurrentID))
                                 .build();
-                        mCallbacks.createNotification(taskUri);
+//                        mCallbacks.createNotification(taskUri);
+
+                        Intent intent = new Intent(mActivity, TaskRemindReceiver.class);
+                        intent.setAction(ACTION_CREATE_NOTIFICATION);
+                        intent.setData(taskUri);
+                        PendingIntent pendingIntent =
+                                PendingIntent.getBroadcast(mActivity, 0, intent, 0);
+                        AlarmManager alarmManager =
+                                (AlarmManager) mActivity.getSystemService(Context.ALARM_SERVICE);
+                        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                SystemClock.elapsedRealtime() + 5000,
+                                pendingIntent);
 
                         //go to task list when save button is pressed
                         if (mActivity != null) {
