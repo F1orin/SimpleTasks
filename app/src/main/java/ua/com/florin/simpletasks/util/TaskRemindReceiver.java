@@ -28,7 +28,6 @@ public class TaskRemindReceiver extends BroadcastReceiver implements MyConstants
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive");
-        Log.d(TAG, "action = " + intent.getAction());
         Uri taskUri = intent.getData();
         createNotification(context, taskUri);
     }
@@ -55,7 +54,9 @@ public class TaskRemindReceiver extends BroadcastReceiver implements MyConstants
         mBuilder.setContentIntent(resultPendingIntent);
 
         Notification taskNotification = mBuilder.getNotification();
-        taskNotification.flags = Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL;
+        taskNotification.flags = Notification.FLAG_AUTO_CANCEL;
+        taskNotification.defaults |= Notification.DEFAULT_SOUND;
+        taskNotification.defaults |= Notification.DEFAULT_LIGHTS;
 
         NotificationManager mNotificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

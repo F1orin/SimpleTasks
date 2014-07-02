@@ -229,22 +229,24 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
                             }
                         }
 
+                        //TODO add functionality to cancel alarm
                         //create notification for this task
-                        Log.d(TAG, "current id:" + mCurrentID);
+                        mRemindCal.set(Calendar.SECOND, 0);
+                        //generate URI with appended task id
                         Uri taskUri = TasksProvider.CONTENT_URI.buildUpon()
                                 .appendPath(String.valueOf(mCurrentID))
                                 .build();
-//                        mCallbacks.createNotification(taskUri);
 
                         Intent intent = new Intent(mActivity, TaskRemindReceiver.class);
                         intent.setAction(ACTION_CREATE_NOTIFICATION);
                         intent.setData(taskUri);
+
                         PendingIntent pendingIntent =
                                 PendingIntent.getBroadcast(mActivity, 0, intent, 0);
                         AlarmManager alarmManager =
                                 (AlarmManager) mActivity.getSystemService(Context.ALARM_SERVICE);
-                        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                SystemClock.elapsedRealtime() + 5000,
+                        alarmManager.set(AlarmManager.RTC_WAKEUP,
+                                mRemindCal.getTimeInMillis(),
                                 pendingIntent);
 
                         //go to task list when save button is pressed
