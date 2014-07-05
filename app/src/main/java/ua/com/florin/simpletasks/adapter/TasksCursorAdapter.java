@@ -48,7 +48,6 @@ public class TasksCursorAdapter extends SimpleCursorAdapter implements MyConstan
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
         super.bindView(view, context, cursor);
-        Log.d(TAG, "bindView");
         TextView titleTextView = (TextView) view.findViewById(R.id.list_item_task_title);
         TextView dateTextView = (TextView) view.findViewById(R.id.list_item_task_date_text_view);
         TextView remindTextView = (TextView) view.findViewById(R.id.list_item_task_remind_text_view);

@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import java.util.Calendar;
+
 import ua.com.florin.simpletasks.R;
 import ua.com.florin.simpletasks.util.MyConstants;
 import ua.com.florin.simpletasks.util.MyHelper;
@@ -63,12 +65,8 @@ public class TestFragment extends Fragment implements MyConstants {
             public void onClick(View v) {
                 if (v.getId() == R.id.testButton) {
                     Log.d(TAG, "test button pressed");
-                    Intent intent = new Intent(getActivity(), TaskRemindReceiver.class);
-                    intent.setAction("action");
-                    intent.putExtra("extra", "extra");
-                    PendingIntent pendingIntent =
-                            PendingIntent.getBroadcast(getActivity(), 0, intent, 0);
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 2000, pendingIntent);
+                    Calendar testCal = MyHelper.getDefaultRemindCalendar();
+                    Log.d(TAG, testCal.toString());
                 }
             }
         };

@@ -11,9 +11,10 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import ua.com.florin.simpletasks.db.TasksProvider;
 import ua.com.florin.simpletasks.fragment.dialog.DatePickerDialogFragment;
 import ua.com.florin.simpletasks.fragment.dialog.TimePickerDialogFragment;
 import ua.com.florin.simpletasks.util.MyConstants;
+import ua.com.florin.simpletasks.util.MyHelper;
 import ua.com.florin.simpletasks.util.TaskRemindReceiver;
 
 
@@ -54,7 +56,12 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
     private AddTaskFragmentCallbacks mCallbacks;
 
     private Calendar mTaskCal = Calendar.getInstance();
-    private Calendar mRemindCal = Calendar.getInstance();
+    private Calendar mRemindCal = MyHelper.getDefaultRemindCalendar();
+
+    {
+        mRemindCal.add(Calendar.HOUR_OF_DAY, 1);
+        mRemindCal.set(Calendar.MINUTE, 0);
+    }
 
     private EditText mTaskTitleView;
     private TextView mTaskDateView;
@@ -80,6 +87,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      */
     @Override
     public void onAttach(Activity activity) {
+        Log.d(TAG, "onAttach");
         super.onAttach(activity);
         try {
             mCallbacks = (AddTaskFragmentCallbacks) activity;
@@ -111,27 +119,8 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-
-        // During startup, check if there are arguments passed to the fragment.
-        // onStart is a good place to do this because the layout has already been
-        // applied to the fragment at this point so we can safely call the method
-        // below that updates the task content.
-        Bundle args = getArguments();
-        if (args != null) {
-            mCurrentID = args.getLong(ARG_TASK_ID);
-            // Set task based on argument passed in
-            updateTaskView(mCurrentID);
-        } else if (mCurrentID != NEW_TASK_CODE) {
-            // Set task based on saved instance state defined during onCreateView
-            updateTaskView(mCurrentID);
-        }
-    }
-
-    @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Log.d(TAG, "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
 
         mTaskTitleView = (EditText) view.findViewById(R.id.frag_add_title);
@@ -213,19 +202,15 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
 
                         if (mCurrentID != NEW_TASK_CODE) {
                             // update existing task
-                            if (mActivity != null) {
-                                mActivity.getContentResolver()
-                                        .update(TasksProvider.CONTENT_URI, mContentValues, "_id=" + mCurrentID, null);
-                            }
+                            mActivity.getContentResolver()
+                                    .update(TasksProvider.CONTENT_URI, mContentValues, "_id=" + mCurrentID, null);
                         } else {
                             // create new task
-                            if (mActivity != null) {
-                                String newTaskIdString = mActivity.getContentResolver()
-                                        .insert(TasksProvider.CONTENT_URI, mContentValues)
-                                        .getLastPathSegment();
-                                if (newTaskIdString != null) {
-                                    mCurrentID = Long.parseLong(newTaskIdString);
-                                }
+                            String newTaskIdString = mActivity.getContentResolver()
+                                    .insert(TasksProvider.CONTENT_URI, mContentValues)
+                                    .getLastPathSegment();
+                            if (newTaskIdString != null) {
+                                mCurrentID = Long.parseLong(newTaskIdString);
                             }
                         }
 
@@ -250,14 +235,10 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
                                 pendingIntent);
 
                         //go to task list when save button is pressed
-                        if (mActivity != null) {
-                            mActivity.getFragmentManager().popBackStack();
-                        }
+                        mActivity.getFragmentManager().popBackStack();
                         break;
                     case R.id.frag_add_button_cancel:
-                        if (mActivity != null) {
-                            mActivity.getFragmentManager().popBackStack();
-                        }
+                        mActivity.getFragmentManager().popBackStack();
                         break;
                     case R.id.frag_add_clear_task_date:
                         mTaskCal = null;
@@ -282,17 +263,56 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "onActivityCreated");
+        // Indicate that this fragment would like to influence the set of actions in the action bar.
+        setHasOptionsMenu(true);
+    }
 
-        // Save the current task selection in case we need to recreate the fragment
-        outState.putLong(ARG_TASK_ID, mCurrentID);
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+
+        // During startup, check if there are arguments passed to the fragment.
+        // onStart is a good place to do this because the layout has already been
+        // applied to the fragment at this point so we can safely call the method
+        // below that updates the task content.
+        Bundle args = getArguments();
+        if (args != null) {
+            mCurrentID = args.getLong(ARG_TASK_ID);
+            // Set task based on argument passed in
+            updateTaskView(mCurrentID);
+        } else if (mCurrentID != NEW_TASK_CODE) {
+            // Set task based on saved instance state defined during onCreateView
+            updateTaskView(mCurrentID);
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Log.d(TAG, "onCreateOptionsMenu");
+        if (menu != null) {
+            menu.removeItem(R.id.action_add);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public void onDetach() {
+        Log.d(TAG, "onDetach");
         super.onDetach();
         mCallbacks = null;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+
+        // Save the current task selection in case we need to recreate the fragment
+        outState.putLong(ARG_TASK_ID, mCurrentID);
     }
 
     /**
@@ -394,7 +414,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      * Updates remind date to that chosen in picker and refreshes its interface view.
      */
     private void showRemindDatePicker() {
-        Calendar mDatePickerCal = (mRemindCal != null) ? mRemindCal : Calendar.getInstance();
+        Calendar mDatePickerCal = (mRemindCal != null) ? mRemindCal : MyHelper.getDefaultRemindCalendar();
         DatePickerDialogFragment datePicker =
                 DatePickerDialogFragment.newInstance(getActivity(), R.string.text_set_date, mDatePickerCal);
         datePicker.setDateDialogFragmentListener(new DatePickerDialogFragment.DatePickerDialogFragmentListener() {
@@ -414,14 +434,14 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      * Updates remind time to that chosen in picker and refreshes its interface view.
      */
     private void showRemindTimePicker() {
-        Calendar mTimePickerCal = (mRemindCal != null) ? mRemindCal : Calendar.getInstance();
+        Calendar mTimePickerCal = (mRemindCal != null) ? mRemindCal : MyHelper.getDefaultRemindCalendar();
         TimePickerDialogFragment timePicker =
                 TimePickerDialogFragment.newInstance(getActivity(), R.string.text_set_time, mTimePickerCal);
         timePicker.setTimeDialogFragmentListener(new TimePickerDialogFragment.TimePickerDialogFragmentListener() {
             @Override
             public void timeDialogFragmentTimeSet(Calendar date) {
                 if (mRemindCal == null) {
-                    mRemindCal = Calendar.getInstance();
+                    mRemindCal = MyHelper.getDefaultRemindCalendar();
                 }
                 mRemindCal.set(Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY));
                 mRemindCal.set(Calendar.MINUTE, date.get(Calendar.MINUTE));

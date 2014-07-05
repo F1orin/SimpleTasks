@@ -75,18 +75,6 @@ public class MainActivity extends Activity implements DBNames, MyConstants,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
     }
 
-    public void onFragmentAttached(int position) {
-        Log.d(TAG, "Attach: " + mDrawerElements[position]);
-        mTitle = mDrawerElements[position];
-    }
-
-    public void restoreActionBar() {
-        ActionBar actionBar = getActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setTitle(mTitle);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "onCreateOptionsMenu");
@@ -119,6 +107,18 @@ public class MainActivity extends Activity implements DBNames, MyConstants,
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void onFragmentAttached(int position) {
+        Log.d(TAG, "Attach: " + mDrawerElements[position]);
+        mTitle = mDrawerElements[position];
+    }
+
+    public void restoreActionBar() {
+        ActionBar actionBar = getActionBar();
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        actionBar.setDisplayShowTitleEnabled(true);
+        actionBar.setTitle(mTitle);
     }
 
     /**

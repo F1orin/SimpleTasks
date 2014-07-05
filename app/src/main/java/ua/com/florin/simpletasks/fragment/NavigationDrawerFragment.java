@@ -69,6 +69,26 @@ public class NavigationDrawerFragment extends Fragment implements MyConstants {
     public NavigationDrawerFragment() {
     }
 
+    /**
+     * Callbacks interface that all activities using this fragment must implement.
+     */
+    public static interface NavigationDrawerCallbacks {
+        /**
+         * Called when an item in the navigation drawer is selected.
+         */
+        void onNavigationDrawerItemSelected(int position);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mCallbacks = (NavigationDrawerCallbacks) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity must implement NavigationDrawerCallbacks.");
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,14 +105,6 @@ public class NavigationDrawerFragment extends Fragment implements MyConstants {
 
         // Select either the default item (0) or the last selected item.
         selectItem(mCurrentSelectedPosition);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated");
-        // Indicate that this fragment would like to influence the set of actions in the action bar.
-        setHasOptionsMenu(true);
     }
 
     @Override
@@ -114,6 +126,53 @@ public class NavigationDrawerFragment extends Fragment implements MyConstants {
                 DRAWER_ELEMENTS));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "onActivityCreated");
+        // Indicate that this fragment would like to influence the set of actions in the action bar.
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Log.d(TAG, "onCreateOptionsMenu");
+        // If the drawer is open, show the global app actions in the action bar. See also
+        // showGlobalContextActionBar, which controls the top-left area of the action bar.
+        if (mDrawerLayout != null && isDrawerOpen()) {
+            inflater.inflate(R.menu.global, menu);
+            showGlobalContextActionBar();
+        }
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_SELECTED_POSITION, mCurrentSelectedPosition);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Forward the new configuration the drawer toggle component.
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     public boolean isDrawerOpen() {
@@ -207,54 +266,6 @@ public class NavigationDrawerFragment extends Fragment implements MyConstants {
         }
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mCallbacks = (NavigationDrawerCallbacks) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException("Activity must implement NavigationDrawerCallbacks.");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mCallbacks = null;
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_SELECTED_POSITION, mCurrentSelectedPosition);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // Forward the new configuration the drawer toggle component.
-        mDrawerToggle.onConfigurationChanged(newConfig);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        // If the drawer is open, show the global app actions in the action bar. See also
-        // showGlobalContextActionBar, which controls the top-left area of the action bar.
-        if (mDrawerLayout != null && isDrawerOpen()) {
-            inflater.inflate(R.menu.global, menu);
-            showGlobalContextActionBar();
-        }
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     /**
      * Per the navigation drawer design guidelines, updates the action bar to show the global app
      * 'context', rather than just what's in the current screen.
@@ -268,15 +279,5 @@ public class NavigationDrawerFragment extends Fragment implements MyConstants {
 
     private ActionBar getActionBar() {
         return getActivity().getActionBar();
-    }
-
-    /**
-     * Callbacks interface that all activities using this fragment must implement.
-     */
-    public static interface NavigationDrawerCallbacks {
-        /**
-         * Called when an item in the navigation drawer is selected.
-         */
-        void onNavigationDrawerItemSelected(int position);
     }
 }

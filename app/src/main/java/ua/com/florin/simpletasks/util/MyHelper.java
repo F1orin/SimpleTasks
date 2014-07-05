@@ -8,6 +8,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
+import java.util.Calendar;
+
 import ua.com.florin.simpletasks.activity.MainActivity;
 import ua.com.florin.simpletasks.db.TasksProvider;
 
@@ -44,5 +46,14 @@ public class MyHelper implements MyConstants {
                 .query(TasksProvider.CONTENT_URI, null, "_id=" + id, null, null);
 
         mTaskByIdCursor.moveToFirst();
+    }
+
+    public static Calendar getDefaultRemindCalendar() {
+        Calendar defaultRemindCalendar = Calendar.getInstance();
+        defaultRemindCalendar.add(Calendar.HOUR_OF_DAY, 1);
+        defaultRemindCalendar.set(Calendar.MINUTE, 0);
+        defaultRemindCalendar.set(Calendar.SECOND, 0);
+        defaultRemindCalendar.set(Calendar.MILLISECOND, 0);
+        return defaultRemindCalendar;
     }
 }
