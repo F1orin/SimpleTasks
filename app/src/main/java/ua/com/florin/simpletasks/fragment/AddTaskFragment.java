@@ -74,9 +74,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      * so that the fragment can deliver messages
      */
     public interface AddTaskFragmentCallbacks {
-
-        //TODO create documentation for this method
-//        public void createNotification(Uri uri);
+        //callback methods to communicate with Activity should be here
     }
 
     /**
@@ -177,21 +175,24 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
         View.OnClickListener buttonsListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Activity mActivity = getActivity();
+//                Activity mActivity = getActivity();
                 switch (v.getId()) {
                     case R.id.frag_add_button_save:
                         ContentValues mContentValues = new ContentValues();
                         mContentValues.put(COL_CREATION_TIME, System.currentTimeMillis());
+                        // save title
                         if (isEmpty(mTaskTitleView)) {
                             mContentValues.putNull(COL_TITLE);
                         } else {
                             mContentValues.put(COL_TITLE, mTaskTitleView.getText().toString());
                         }
+                        // save task date
                         if (mTaskCal == null) {
                             mContentValues.putNull(COL_EXECUTION_TIME);
                         } else {
                             mContentValues.put(COL_EXECUTION_TIME, mTaskCal.getTimeInMillis());
                         }
+                        // save remind date and time
                         if (mRemindCal == null) {
                             mContentValues.putNull(COL_REMIND_TIME);
                         } else {
@@ -202,43 +203,25 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
 
                         if (mCurrentID != NEW_TASK_CODE) {
                             // update existing task
-                            mActivity.getContentResolver()
+                            getActivity().getContentResolver()
                                     .update(TasksProvider.CONTENT_URI, mContentValues, "_id=" + mCurrentID, null);
                         } else {
                             // create new task
-                            String newTaskIdString = mActivity.getContentResolver()
+                            String newTaskId = getActivity().getContentResolver()
                                     .insert(TasksProvider.CONTENT_URI, mContentValues)
                                     .getLastPathSegment();
-                            if (newTaskIdString != null) {
-                                mCurrentID = Long.parseLong(newTaskIdString);
+                            if (newTaskId != null) {
+                                mCurrentID = Long.parseLong(newTaskId);
                             }
                         }
 
-                        //TODO add functionality to cancel alarm
-                        //create notification for this task
-                        mRemindCal.set(Calendar.SECOND, 0);
-                        //generate URI with appended task id
-                        Uri taskUri = TasksProvider.CONTENT_URI.buildUpon()
-                                .appendPath(String.valueOf(mCurrentID))
-                                .build();
-
-                        Intent intent = new Intent(mActivity, TaskRemindReceiver.class);
-                        intent.setAction(ACTION_CREATE_NOTIFICATION);
-                        intent.setData(taskUri);
-
-                        PendingIntent pendingIntent =
-                                PendingIntent.getBroadcast(mActivity, 0, intent, 0);
-                        AlarmManager alarmManager =
-                                (AlarmManager) mActivity.getSystemService(Context.ALARM_SERVICE);
-                        alarmManager.set(AlarmManager.RTC_WAKEUP,
-                                mRemindCal.getTimeInMillis(),
-                                pendingIntent);
+                        scheduleReminder();
 
                         //go to task list when save button is pressed
-                        mActivity.getFragmentManager().popBackStack();
+                        getActivity().getFragmentManager().popBackStack();
                         break;
                     case R.id.frag_add_button_cancel:
-                        mActivity.getFragmentManager().popBackStack();
+                        getActivity().getFragmentManager().popBackStack();
                         break;
                     case R.id.frag_add_clear_task_date:
                         mTaskCal = null;
@@ -460,5 +443,32 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
      */
     private boolean isEmpty(EditText editText) {
         return editText.getText().toString().trim().length() == 0;
+    }
+
+    /**
+     * Schedules a reminder for the current task
+     */
+    private void scheduleReminder() {
+        // generate URI with appended task id
+        Uri taskUri = TasksProvider.CONTENT_URI.buildUpon()
+                .appendPath(String.valueOf(mCurrentID))
+                .build();
+
+        Intent createNotificationIntent = new Intent(getActivity(), TaskRemindReceiver.class);
+        createNotificationIntent.setAction(ACTION_CREATE_NOTIFICATION);
+        createNotificationIntent.setData(taskUri);
+
+        PendingIntent createNotificationPendingIntent =
+                PendingIntent.getBroadcast(getActivity(), 0, createNotificationIntent, 0);
+
+        AlarmManager alarmManager =
+                (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+        if (mRemindCal != null) {
+            // create new reminder, overriding any previously existing alarms for this task
+            alarmManager.set(AlarmManager.RTC_WAKEUP, mRemindCal.getTimeInMillis(), createNotificationPendingIntent);
+        } else {
+            // cancel the existing reminder
+            alarmManager.cancel(createNotificationPendingIntent);
+        }
     }
 }
