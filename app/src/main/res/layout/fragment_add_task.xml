@@ -34,21 +34,20 @@
         <TextView
             android:id="@+id/frag_add_task_date"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
             android:gravity="center"
             android:hint="@string/hint_exec_date"
-            android:background="@drawable/my_pressable_background"
+            android:background="@drawable/my_spinner_background"
             android:clickable="true"
-            android:textSize="@dimen/frag_add_text_size"
-            android:text="manise" />
+            android:textSize="@dimen/frag_add_text_size"/>
 
         <ImageButton
             android:id="@+id/frag_add_clear_task_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/my_pressable_background"
+            android:background="@android:drawable/btn_default_small"
             android:contentDescription="@string/clearButton"
             android:src="@drawable/ic_action_remove" />
     </LinearLayout>
@@ -75,23 +74,24 @@
             <TextView
                 android:id="@+id/frag_add_remind_time"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/frag_add_remind_fields_height"
+                android:layout_height="wrap_content"
                 android:ems="10"
                 android:gravity="center"
                 android:hint="@string/hint_remind_time"
                 android:textSize="@dimen/frag_add_text_size"
                 android:clickable="true"
-                android:background="@drawable/my_pressable_background" />
+                android:background="@drawable/my_spinner_background" />
 
             <TextView
                 android:id="@+id/frag_add_remind_date"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/frag_add_remind_fields_height"
+                android:layout_height="wrap_content"
                 android:ems="10"
                 android:gravity="center"
                 android:textSize="@dimen/frag_add_text_size"
                 android:clickable="true"
-                android:background="@drawable/my_pressable_background" />
+                android:background="@drawable/my_spinner_background"
+                android:hint="@string/hint_remind_date" />
         </LinearLayout>
 
         <LinearLayout
@@ -103,7 +103,7 @@
                 android:id="@+id/frag_add_clear_remind"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/my_pressable_background"
+                android:background="@android:drawable/btn_default_small"
                 android:contentDescription="@string/clearButton"
                 android:src="@drawable/ic_action_remove" />
 
@@ -123,23 +123,19 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/frag_add_repeat"
+        <Spinner
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/repeat_terms_spinner"
             android:layout_weight="1"
-            android:ems="10"
-            android:gravity="center"
-            android:hint="@string/hint_repeat"
-            android:textSize="@dimen/frag_add_text_size"
-            android:clickable="true"
-            android:background="@drawable/my_pressable_background" />
+            android:textAlignment="center"
+            android:gravity="center" />
 
         <ImageButton
             android:id="@+id/frag_add_clear_repeat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/my_pressable_background"
+            android:background="@android:drawable/btn_default_small"
             android:contentDescription="@string/clearButton"
             android:src="@drawable/ic_action_remove" />
     </LinearLayout>

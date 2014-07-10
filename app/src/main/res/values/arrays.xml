@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string-array name="drawer_items">
         <item>Tasks</item>
         <item>About</item>
         <item>Test</item>
     </string-array>
+
+    <string-array name="repeat_terms">
+        <item>Once</item>
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+        <item>Yearly</item>
+        <item>Custom</item>
+    </string-array>
+
 </resources>

@@ -61,8 +61,6 @@ public class TaskRemindReceiver extends BroadcastReceiver implements MyConstants
         NotificationManager mNotificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        //TODO fix hard code
-        mNotificationManager.notify(88, taskNotification);
-        Log.d(TAG, "notification created: " + uri);
+        mNotificationManager.notify(TASK_NOTIFICATION_ID, taskNotification);
     }
 }

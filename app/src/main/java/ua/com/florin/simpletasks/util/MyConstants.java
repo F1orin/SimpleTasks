@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 public interface MyConstants {
 
     int NEW_TASK_CODE = -88;
+    int TASK_NOTIFICATION_ID = 99;
 
     String ARG_DRAWER_POSITION = "drawer_position";
     String ARG_TASK_ID = "task_id";

@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,9 +19,12 @@ import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.Calendar;
@@ -58,16 +62,13 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
     private Calendar mTaskCal = Calendar.getInstance();
     private Calendar mRemindCal = MyHelper.getDefaultRemindCalendar();
 
-    {
-        mRemindCal.add(Calendar.HOUR_OF_DAY, 1);
-        mRemindCal.set(Calendar.MINUTE, 0);
-    }
-
     private EditText mTaskTitleView;
     private TextView mTaskDateView;
     private TextView mRemindTimeView;
     private TextView mRemindDateView;
-    private TextView mTaskRepeatView;
+    private Spinner mTaskRepeatSpinner;
+
+    private long repeatInterval;
 
     /**
      * The container Activity must implement this interface
@@ -125,7 +126,8 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
         mTaskDateView = (TextView) view.findViewById(R.id.frag_add_task_date);
         mRemindTimeView = (TextView) view.findViewById(R.id.frag_add_remind_time);
         mRemindDateView = (TextView) view.findViewById(R.id.frag_add_remind_date);
-        mTaskRepeatView = (TextView) view.findViewById(R.id.frag_add_repeat);
+        mTaskRepeatSpinner = (Spinner) view.findViewById(R.id.repeat_terms_spinner);
+//        mTaskRepeatView = (TextView) view.findViewById(R.id.frag_add_repeat);
 
         final Button saveButton = (Button) view.findViewById(R.id.frag_add_button_save);
         final Button cancelButton = (Button) view.findViewById(R.id.frag_add_button_cancel);
@@ -152,6 +154,7 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
                     case R.id.frag_add_remind_time:
                         if (event.getAction() == MotionEvent.ACTION_UP) {
                             showRemindTimePicker();
+                            mRemindDateView.setVisibility(View.VISIBLE);
                             return true;
                         }
                     case R.id.frag_add_remind_date:
@@ -229,10 +232,12 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
                         break;
                     case R.id.frag_add_clear_remind:
                         mRemindCal = null;
+                        mRemindDateView.setVisibility(View.GONE);
                         updateRemindTimeView();
                         updateRemindDateView();
                         break;
                     case R.id.frag_add_clear_repeat:
+                        mTaskRepeatSpinner.setSelection(0);
                         break;
                 }
             }
@@ -243,6 +248,24 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
         clearRemindButton.setOnClickListener(buttonsListener);
         clearTaskRepeatButton.setOnClickListener(buttonsListener);
 
+        /**
+         * A listener for repeat interval spinner.
+         */
+        AdapterView.OnItemSelectedListener spinnerListener = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        };
+        mTaskRepeatSpinner.setOnItemSelectedListener(spinnerListener);
+
+        ArrayAdapter<CharSequence> repeatTermsAdapter =
+                ArrayAdapter.createFromResource(getActivity(), R.array.repeat_terms, R.layout.my_spinner_textview);
+        mTaskRepeatSpinner.setAdapter(repeatTermsAdapter);
     }
 
     @Override
@@ -465,10 +488,17 @@ public class AddTaskFragment extends Fragment implements DBNames, MyConstants {
                 (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
         if (mRemindCal != null) {
             // create new reminder, overriding any previously existing alarms for this task
-            alarmManager.set(AlarmManager.RTC_WAKEUP, mRemindCal.getTimeInMillis(), createNotificationPendingIntent);
+            // note: starting from KitKat setExact() is the only alarms for which there is a
+            // strong demand for exact-time delivery
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, mRemindCal.getTimeInMillis(), createNotificationPendingIntent);
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, mRemindCal.getTimeInMillis(), createNotificationPendingIntent);
+            }
         } else {
             // cancel the existing reminder
             alarmManager.cancel(createNotificationPendingIntent);
         }
     }
+    //TODO add repeat functionality, pass interval to next alarm in extra, then compare it with constant of one-time event and process
 }
